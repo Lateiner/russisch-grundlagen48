@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Trainer: Imperativ-Bildung</title>
+    <!-- Polyfill für Drag & Drop auf Touch-Geräten -->
+    <script src="https://cdn.jsdelivr.net/npm/drag-drop-touch@1.3.1/DragDropTouch.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success: #27ae60;
+            --error: #e74c3c;
+            --bg: #f4f7f6;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--primary-color);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--white);
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .intro {
+            background: #eef7fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            font-size: 0.95em;
+        }
+
+        /* Drag and Drop Bereich */
+        .drag-section {
+            margin-bottom: 40px;
+        }
+
+        .pool {
+            background: #f8f9fa;
+            border: 2px dashed #ccc;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            min-height: 60px;
+            margin-bottom: 20px;
+        }
+
+        .draggable {
+            background: var(--accent-color);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: grab;
+            user-select: none;
+            font-weight: bold;
+            transition: transform 0.2s, background-color 0.3s;
+        }
+
+        .draggable:active { cursor: grabbing; }
+
+        /* Drei-Säulen-Layout */
+        .columns-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .column {
+            background: #fff;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            transition: background 0.3s;
+        }
+
+        .column h3 {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            color: var(--accent-color);
+            text-align: center;
+        }
+
+        .drop-zone-area {
+            width: 100%;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Andere Aufgabenformen */
+        .task-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #fafafa;
+        }
+
+        .task-title {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .option-btn {
+            background: #eee;
+            border: 1px solid #ccc;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        /* Feedback Farben */
+        .correct { background-color: var(--success) !important; color: white !important; border-color: #1e8449 !important; }
+        .incorrect { background-color: var(--error) !important; color: white !important; border-color: #922b21 !important; }
+
+        /* Buttons */
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        button.action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            background: #95a5a6;
+            color: white;
+        }
+
+        button.action-btn.solve { background: var(--accent-color); }
+        button.action-btn:hover { opacity: 0.8; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .columns-container { grid-template-columns: 1fr; }
+            .column { min-height: 150px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Russisch: Der Imperativ</h1>
+
+    <div class="intro">
+        <strong>Kurz-Anleitung:</strong> Die Endung des Imperativs hängt vom Stamm der 3. Person Plural ab:
+        <ul>
+            <li><strong>Endung -и:</strong> Wenn die я-Form betont ist (пишу &rarr; пиш<b>и</b>).</li>
+            <li><strong>Endung -й:</strong> Wenn der Stamm auf einen Vokal endet (читаю &rarr; чит<b>ай</b>).</li>
+            <li><strong>Endung -ь:</strong> Wenn der Stamm auf Konsonant endet und unbetont ist (готовлю &rarr; готов<b>ь</b>).</li>
+        </ul>
+    </div>
+
+    <!-- Teil 1: Die Drei-Säulen-Aufgabe (Gemischt) -->
+    <div class="drag-section" id="sorting-task">
+        <h2>Aufgaben 1–10: Sortieren</h2>
+        <p>Ziehe die Imperative in die richtige Säule. Die Wörter werden bei jedem Laden neu gemischt.</p>
+        
+        <div class="pool" id="drag-pool" ondrop="dropToPool(event)" ondragover="allowDrop(event)">
+            <div class="draggable" draggable="true" ondragstart="drag(event)" id="item1" data-type="i">пиши</div>
+            <div class="draggable" draggable="true" ondragstart="drag(event)" id="item2" data-type="j">читай</div>
+            <div class="draggable" draggable="true" ondragstart="drag(event)" id="item3" data-type="b">готовь</div>
+            <div class="draggable" draggable="true" ondragstart="drag(event)" id="item4" data-type="i">иди</div>
+            <div class="draggable" draggable="true" ondragstart="drag(event)" id="item5" data-type="j">работай</div>
+            <div class="draggable" draggable="true" ondragstart="drag(event)" id="item6" data-type="b">встань</div>
+            <div class="draggable" draggable="true" ondragstart="drag(event)" id="item7" data-type="i">смотри</div>
+            <div class="draggable" draggable="true" ondragstart="drag(event)" id="item8" data-type="j">пой</div>
+            <div class="draggable" draggable="true" ondragstart="drag(event)" id="item9" data-type="b">ответь</div>
+            <div class="draggable" draggable="true" ondragstart="drag(event)" id="item10" data-type="i">помоги</div>
+        </div>
+
+        <div class="columns-container">
+            <div class="column" data-type="i" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <h3>Endung -и</h3>
+                <div class="drop-zone-area"></div>
+            </div>
+            <div class="column" data-type="j" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <h3>Endung -й</h3>
+                <div class="drop-zone-area"></div>
+            </div>
+            <div class="column" data-type="b" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <h3>Endung -ь</h3>
+                <div class="drop-zone-area"></div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="action-btn" onclick="resetSorting()">Zurücksetzen & Mischen</button>
+            <button class="action-btn solve" onclick="solveSorting()">Lösung anzeigen</button>
+        </div>
+    </div>
+
+    <!-- Teil 2: Reflexiv & Ausnahmen -->
+    <h2>Aufgaben 11–20: Auswahl</h2>
+    <p>Klicke auf die richtige Form (sofortiges Feedback).</p>
+
+    <div class="task-card">
+        <span class="task-title">11. sich anziehen (одеваться): „Zieh dich an!“</span>
+        <div class="options-grid">
+            <div class="option-btn" onclick="checkSelect(this, true)">одевайся</div>
+            <div class="option-btn" onclick="checkSelect(this, false)">одевайсь</div>
+        </div>
+    </div>
+
+    <div class="task-card">
+        <span class="task-title">12. lächeln (улыбаться): „Lächele!“</span>
+        <div class="options-grid">
+            <div class="option-btn" onclick="checkSelect(this, false)">улыбнися</div>
+            <div class="option-btn" onclick="checkSelect(this, true)">улыбнись</div>
+        </div>
+    </div>
+
+    <div class="task-card">
+        <span class="task-title">13. sich setzen (садиться) – Plural/Höflich: „Setzen Sie sich!“</span>
+        <div class="options-grid">
+            <div class="option-btn" onclick="checkSelect(this, true)">садитесь</div>
+            <div class="option-btn" onclick="checkSelect(this, false)">садитеся</div>
+        </div>
+    </div>
+
+    <div class="task-card">
+        <span class="task-title">14. essen (есть): „Iss!“</span>
+        <div class="options-grid">
+            <div class="option-btn" onclick="checkSelect(this, false)">еди</div>
+            <div class="option-btn" onclick="checkSelect(this, true)">ешь</div>
+        </div>
+    </div>
+
+    <div class="task-card">
+        <span class="task-title">15. trinken (пить): „Trink!“</span>
+        <div class="options-grid">
+            <div class="option-btn" onclick="checkSelect(this, true)">пей</div>
+            <div class="option-btn" onclick="checkSelect(this, false)">пий</div>
+        </div>
+    </div>
+
+    <div class="task-card">
+        <span class="task-title">16. geben (давать): „Gib!“</span>
+        <div class="options-grid">
+            <div class="option-btn" onclick="checkSelect(this, false)">дай</div>
+            <div class="option-btn" onclick="checkSelect(this, true)">давай</div>
+        </div>
+    </div>
+
+    <div class="task-card">
+        <span class="task-title">17. vergessen (забыть): „Vergiss!“</span>
+        <div class="options-grid">
+            <div class="option-btn" onclick="checkSelect(this, true)">забудь</div>
+            <div class="option-btn" onclick="checkSelect(this, false)">забуди</div>
+        </div>
+    </div>
+
+    <div class="task-card">
+        <span class="task-title">18. sagen (сказать &rarr; скажи): „Sagen Sie!“</span>
+        <div class="options-grid">
+            <div class="option-btn" onclick="checkSelect(this, true)">скажите</div>
+            <div class="option-btn" onclick="checkSelect(this, false)">скажьте</div>
+        </div>
+    </div>
+
+    <div class="task-card">
+        <span class="task-title">19. helfen (помочь &rarr; помоги): „Helft!“</span>
+        <div class="options-grid">
+            <div class="option-btn" onclick="checkSelect(this, false)">помогьте</div>
+            <div class="option-btn" onclick="checkSelect(this, true)">помогите</div>
+        </div>
+    </div>
+
+    <div class="task-card">
+        <span class="task-title">20. sein (быть &rarr; будь): „Seien Sie!“</span>
+        <div class="options-grid">
+            <div class="option-btn" onclick="checkSelect(this, true)">будьте</div>
+            <div class="option-btn" onclick="checkSelect(this, false)">будите</div>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin: 30px 0;">
+        <button class="action-btn" onclick="window.location.reload()">Gesamtes Blatt neu laden</button>
+    </div>
+
+</div>
+
+<script>
+    // --- Mischen-Funktion beim Laden ---
+    window.onload = function() {
+        shufflePool();
+    };
+
+    function shufflePool() {
+        const pool = document.getElementById('drag-pool');
+        for (let i = pool.children.length; i >= 0; i--) {
+            pool.appendChild(pool.children[Math.random() * i | 0]);
+        }
+    }
+
+    // --- Drag and Drop Logik ---
+    function allowDrop(ev) {
+        ev.preventDefault();
+    }
+
+    function drag(ev) {
+        ev.dataTransfer.setData("text", ev.target.id);
+    }
+
+    function drop(ev) {
+        ev.preventDefault();
+        const data = ev.dataTransfer.getData("text");
+        const draggedElement = document.getElementById(data);
+        const column = ev.target.closest('.column');
+        
+        if (column) {
+            const dropArea = column.querySelector('.drop-zone-area');
+            dropArea.appendChild(draggedElement);
+            checkItem(draggedElement, column);
+        }
+    }
+
+    function dropToPool(ev) {
+        ev.preventDefault();
+        const data = ev.dataTransfer.getData("text");
+        const draggedElement = document.getElementById(data);
+        const pool = document.getElementById('drag-pool');
+        
+        draggedElement.classList.remove('correct', 'incorrect');
+        pool.appendChild(draggedElement);
+    }
+
+    function checkItem(item, column) {
+        const itemType = item.getAttribute('data-type');
+        const columnType = column.getAttribute('data-type');
+
+        if (itemType === columnType) {
+            item.classList.remove('incorrect');
+            item.classList.add('correct');
+        } else {
+            item.classList.remove('correct');
+            item.classList.add('incorrect');
+        }
+    }
+
+    function solveSorting() {
+        const items = document.querySelectorAll('.draggable');
+        const columns = document.querySelectorAll('.column');
+        
+        items.forEach(item => {
+            const type = item.getAttribute('data-type');
+            const targetColumn = Array.from(columns).find(c => c.getAttribute('data-type') === type);
+            const dropArea = targetColumn.querySelector('.drop-zone-area');
+            
+            item.classList.remove('incorrect');
+            item.classList.add('correct');
+            dropArea.appendChild(item);
+        });
+    }
+
+    function resetSorting() {
+        const pool = document.getElementById('drag-pool');
+        const items = document.querySelectorAll('.draggable');
+        items.forEach(item => {
+            item.classList.remove('correct', 'incorrect');
+            pool.appendChild(item);
+        });
+        shufflePool();
+    }
+
+    // --- Auswahl Logik ---
+    function checkSelect(btn, isCorrect) {
+        const parent = btn.parentElement;
+        const buttons = parent.querySelectorAll('.option-btn');
+        
+        buttons.forEach(b => b.classList.remove('correct', 'incorrect'));
+        
+        if (isCorrect) {
+            btn.classList.add('correct');
+        } else {
+            btn.classList.add('incorrect');
+        }
+    }
+</script>
+
+</body>
+</html>
