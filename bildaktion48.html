@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Trainer: Bild-Aktion-Matching</title>
+    <!-- Polyfill für Drag & Drop auf Touch-Geräten -->
+    <script src="https://cdn.jsdelivr.net/npm/drag-drop-touch@1.3.1/DragDropTouch.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .intro-box {
+            background-color: #eef7fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 6px solid var(--accent-color);
+        }
+
+        /* Grid für die Aufgaben-Karten */
+        .exercise-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .task-card {
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 15px;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            transition: transform 0.2s;
+        }
+
+        .image-area {
+            font-size: 60px; /* Emojis als Bildersatz */
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+
+        .drop-zone {
+            width: 80%;
+            height: 40px;
+            border: 2px dashed var(--accent-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            background-color: #fafafa;
+            transition: all 0.3s ease;
+        }
+
+        .options-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            min-height: 40px;
+        }
+
+        .drag-item {
+            padding: 6px 12px;
+            background-color: var(--accent-color);
+            color: white;
+            border-radius: 5px;
+            cursor: grab;
+            font-size: 0.9em;
+            user-select: none;
+            touch-action: none;
+        }
+
+        .drag-item:active { cursor: grabbing; }
+
+        /* Feedback-Farben */
+        .correct {
+            background-color: var(--success-color) !important;
+            border-color: #1e8449 !important;
+            color: white !important;
+        }
+
+        .incorrect {
+            background-color: var(--error-color) !important;
+            border-color: #922b21 !important;
+            color: white !important;
+        }
+
+        /* Button-Styling */
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 5px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.8em;
+            color: white;
+            transition: opacity 0.2s;
+        }
+
+        .btn-reset { background-color: #95a5a6; }
+        .btn-solve { background-color: var(--accent-color); }
+        .action-btn:hover { opacity: 0.8; }
+
+        @media (max-width: 600px) {
+            .container { padding: 15px; }
+            .exercise-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Bild-Aktion-Matching</h1>
+
+    <div class="intro-box">
+        <strong>Anleitung:</strong> Ziehen Sie das passende russische Kommando (Imperativ) auf das Bild. 
+        Die Farbe zeigt sofort an: <span style="color:var(--success-color); font-weight:bold;">Grün (Richtig)</span> oder <span style="color:var(--error-color); font-weight:bold;">Rot (Falsch)</span>.
+    </div>
+
+    <div class="exercise-grid" id="exercise-root"></div>
+</div>
+
+<script>
+    const tasks = [
+        { id: 1, emoji: "🥣", options: ["пей!", "ешь!", "пой!"], correct: "ешь!" },
+        { id: 2, emoji: "☕", options: ["пей!", "ешь!", "купи!"], correct: "пей!" },
+        { id: 3, emoji: "📖", options: ["пиши!", "читай!", "думай!"], correct: "читай!" },
+        { id: 4, emoji: "✍️", options: ["читай!", "рисуй!", "пиши!"], correct: "пиши!" },
+        { id: 5, emoji: "😴", options: ["иди!", "спи!", "сиди!"], correct: "спи!" },
+        { id: 6, emoji: "🎧", options: ["смотри!", "слушай!", "пой!"], correct: "слушай!" },
+        { id: 7, emoji: "🗣️", options: ["молчи!", "говори!", "пей!"], correct: "говори!" },
+        { id: 8, emoji: "🤫", options: ["говори!", "молчи!", "спи!"], correct: "молчи!" },
+        { id: 9, emoji: "🧍‍♂️", options: ["встань!", "сядь!", "беги!"], correct: "встань!" },
+        { id: 10, emoji: "🪑", options: ["встань!", "садись!", "иди!"], correct: "садись!" },
+        { id: 11, emoji: "😊", options: ["плачь!", "улыбнись!", "спи!"], correct: "улыбнись!" },
+        { id: 12, emoji: "🚶", options: ["стой!", "иди!", "сиди!"], correct: "иди!" },
+        { id: 13, emoji: "📺", options: ["смотри!", "слушай!", "пиши!"], correct: "смотри!" },
+        { id: 14, emoji: "🎨", options: ["рисуй!", "читай!", "готовь!"], correct: "рисуй!" },
+        { id: 15, emoji: "🎁", options: ["возьми!", "дай!", "ешь!"], correct: "дай!" },
+        { id: 16, emoji: "🤲", options: ["дай!", "возьми!", "брось!"], correct: "возьми!" },
+        { id: 17, emoji: "🧼", options: ["мой!", "пей!", "пой!"], correct: "мой!" },
+        { id: 18, emoji: "🎤", options: ["молчи!", "пой!", "ешь!"], correct: "пой!" },
+        { id: 19, emoji: "🤔", options: ["думай!", "беги!", "пей!"], correct: "думай!" },
+        { id: 20, emoji: "🆘", options: ["молчи!", "помоги!", "иди!"], correct: "помоги!" }
+    ];
+
+    function initExercises() {
+        const root = document.getElementById('exercise-root');
+        tasks.forEach(task => {
+            const card = document.createElement('div');
+            card.className = 'task-card';
+            card.id = `task-${task.id}`;
+
+            // Emojis mischen (Zufällige Reihenfolge der Optionen)
+            const shuffledOptions = [...task.options].sort(() => Math.random() - 0.5);
+
+            card.innerHTML = `
+                <div class="image-area">${task.emoji}</div>
+                <div class="drop-zone" ondrop="handleDrop(event, ${task.id})" ondragover="handleDragOver(event)">...</div>
+                <div class="options-pool">
+                    ${shuffledOptions.map((opt, index) => `
+                        <div class="drag-item" 
+                             draggable="true" 
+                             id="drag-${task.id}-${index}" 
+                             ondragstart="handleDragStart(event)">${opt}</div>
+                    `).join('')}
+                </div>
+                <div class="button-group">
+                    <button class="action-btn btn-reset" onclick="resetTask(${task.id})">Reset</button>
+                    <button class="action-btn btn-solve" onclick="solveTask(${task.id})">Lösung</button>
+                </div>
+            `;
+            root.appendChild(card);
+        });
+    }
+
+    // Drag & Drop Funktionen
+    function handleDragStart(ev) {
+        ev.dataTransfer.setData("text/plain", ev.target.innerText);
+        ev.dataTransfer.setData("elementId", ev.target.id);
+    }
+
+    function handleDragOver(ev) {
+        ev.preventDefault();
+    }
+
+    function handleDrop(ev, taskId) {
+        ev.preventDefault();
+        const droppedText = ev.dataTransfer.getData("text/plain");
+        const dropZone = ev.currentTarget;
+        const task = tasks.find(t => t.id === taskId);
+
+        dropZone.innerText = droppedText;
+
+        if (droppedText === task.correct) {
+            dropZone.className = "drop-zone correct";
+        } else {
+            dropZone.className = "drop-zone incorrect";
+        }
+    }
+
+    // Button-Logik
+    window.resetTask = function(taskId) {
+        const card = document.getElementById(`task-${taskId}`);
+        const dropZone = card.querySelector('.drop-zone');
+        dropZone.innerText = "...";
+        dropZone.className = "drop-zone";
+    };
+
+    window.solveTask = function(taskId) {
+        const task = tasks.find(t => t.id === taskId);
+        const card = document.getElementById(`task-${taskId}`);
+        const dropZone = card.querySelector('.drop-zone');
+        dropZone.innerText = task.correct;
+        dropZone.className = "drop-zone correct";
+    };
+
+    // Initialisierung starten
+    initExercises();
+</script>
+
+</body>
+</html>
