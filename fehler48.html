@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Trainer: Fehler-Detektiv Imperativ</title>
+    <!-- Polyfill für Drag & Drop (auf Touch-Geräten) -->
+    <script src="https://cdn.jsdelivr.net/npm/drag-drop-touch@1.3.1/DragDropTouch.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        h1, h2 {
+            text-align: center;
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .intro-box {
+            background-color: #eef7fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 6px solid var(--accent-color);
+        }
+
+        .instruction {
+            margin-bottom: 20px;
+            font-style: italic;
+            display: block;
+        }
+
+        /* Detektiv-Grid */
+        .detective-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .word-card {
+            background-color: #fff;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 80px;
+            position: relative;
+        }
+
+        .word-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .word-text {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .correction {
+            display: none;
+            font-size: 0.9em;
+            color: #fff;
+            margin-top: 5px;
+            font-weight: normal;
+        }
+
+        /* Status-Farben */
+        .correct {
+            background-color: var(--success-color) !important;
+            border-color: #219150 !important;
+            color: white !important;
+        }
+
+        .incorrect {
+            background-color: var(--error-color) !important;
+            border-color: #c0392b !important;
+            color: white !important;
+        }
+
+        .incorrect .correction {
+            display: block;
+        }
+
+        /* Footer Buttons */
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            transition: opacity 0.2s;
+        }
+
+        .btn-reset { background-color: #95a5a6; }
+        .btn-solve { background-color: var(--accent-color); }
+        .action-btn:hover { opacity: 0.8; }
+
+        @media (max-width: 600px) {
+            .container { padding: 15px; }
+            .detective-grid { grid-template-columns: 1fr; }
+            .button-group { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Der Fehler-Detektiv</h1>
+
+    <div class="intro-box">
+        <strong>Deine Mission:</strong> In dieser Liste von Imperativen haben sich 10 Fehler eingeschlichen. 
+        Klicke auf die Wörter, um sie zu überprüfen. 
+        <ul>
+            <li>Richtig gebildete Wörter werden <strong>grün</strong> markiert.</li>
+            <li>Falsch gebildete Wörter werden <strong>rot</strong> markiert und die Korrektur erscheint.</li>
+        </ul>
+    </div>
+
+    <span class="instruction">Finde alle 10 Fehler:</span>
+
+    <div class="detective-grid" id="word-list">
+        <!-- Wörter werden per JS eingefügt -->
+    </div>
+
+    <div class="button-group">
+        <button class="action-btn btn-reset" onclick="resetGame()">Alle zurücksetzen</button>
+        <button class="action-btn btn-solve" onclick="solveGame()">Alle Lösungen zeigen</button>
+    </div>
+</div>
+
+<script>
+    const detectiveData = [
+        { word: "пишити", correct: false, solution: "пишите" },
+        { word: "работай", correct: true, solution: "" },
+        { word: "встани", correct: false, solution: "встань" },
+        { word: "улыбнися", correct: false, solution: "улыбнись" },
+        { word: "готовте", correct: false, solution: "готовьте" },
+        { word: "иди", correct: true, solution: "" },
+        { word: "читаите", correct: false, solution: "читайте" },
+        { word: "ешь", correct: true, solution: "" },
+        { word: "помогьте", correct: false, solution: "помогите" },
+        { word: "пойте", correct: true, solution: "" },
+        { word: "ответи", correct: false, solution: "ответь" },
+        { word: "смотри", correct: true, solution: "" },
+        { word: "садися", correct: false, solution: "садись" },
+        { word: "пей", correct: true, solution: "" },
+        { word: "вернитеся", correct: false, solution: "вернитесь" },
+        { word: "молчи", correct: true, solution: "" },
+        { word: "забуди", correct: false, solution: "забудь" },
+        { word: "скажите", correct: true, solution: "" },
+        { word: "делай", correct: true, solution: "" },
+        { word: "слушаи", correct: false, solution: "слушай" }
+    ];
+
+    function renderWords() {
+        const grid = document.getElementById('word-list');
+        grid.innerHTML = '';
+        
+        detectiveData.forEach((item, index) => {
+            const card = document.createElement('div');
+            card.className = 'word-card';
+            card.id = `word-${index}`;
+            card.onclick = () => checkWord(index);
+            
+            const wordSpan = document.createElement('span');
+            wordSpan.className = 'word-text';
+            wordSpan.innerText = item.word;
+            
+            const correctionSpan = document.createElement('span');
+            correctionSpan.className = 'correction';
+            correctionSpan.innerText = item.correct ? "" : `Korrektur: ${item.solution}`;
+            
+            card.appendChild(wordSpan);
+            card.appendChild(correctionSpan);
+            grid.appendChild(card);
+        });
+    }
+
+    function checkWord(index) {
+        const card = document.getElementById(`word-${index}`);
+        const data = detectiveData[index];
+        
+        if (data.correct) {
+            card.classList.add('correct');
+            card.classList.remove('incorrect');
+        } else {
+            card.classList.add('incorrect');
+            card.classList.remove('correct');
+        }
+    }
+
+    window.resetGame = function() {
+        const cards = document.querySelectorAll('.word-card');
+        cards.forEach(card => {
+            card.classList.remove('correct', 'incorrect');
+        });
+    }
+
+    window.solveGame = function() {
+        detectiveData.forEach((_, index) => {
+            checkWord(index);
+        });
+    }
+
+    // Initialisierung
+    renderWords();
+</script>
+
+</body>
+</html>
