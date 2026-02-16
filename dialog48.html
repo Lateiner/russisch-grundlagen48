@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Trainer: Imperativ im Dialog</title>
+    <!-- Polyfill für Drag & Drop auf Touch-Geräten -->
+    <script src="https://cdn.jsdelivr.net/npm/drag-drop-touch@1.3.1/DragDropTouch.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --chat-left: #f1f0f0;
+            --chat-right: #0084ff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .intro-box {
+            background-color: #eef7fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 6px solid var(--accent-color);
+            font-size: 0.95em;
+        }
+
+        .task-card {
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 25px;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chat-bubble {
+            max-width: 85%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            font-size: 1.05em;
+            line-height: 1.4;
+        }
+
+        .bubble-a {
+            align-self: flex-start;
+            background-color: var(--chat-left);
+            color: #000;
+            border-bottom-left-radius: 4px;
+        }
+
+        .bubble-b {
+            align-self: flex-end;
+            background-color: var(--chat-right);
+            color: #fff;
+            border-bottom-right-radius: 4px;
+        }
+
+        /* Dropdown Styling */
+        select {
+            font-size: 1em;
+            padding: 2px 5px;
+            border-radius: 4px;
+            border: 2px solid transparent;
+            background-color: #fff;
+            color: #000;
+            cursor: pointer;
+            margin: 0 4px;
+            font-weight: bold;
+            outline: none;
+        }
+
+        /* Feedback Farben */
+        select.correct {
+            background-color: var(--success-color) !important;
+            color: white !important;
+            border-color: #1e8449 !important;
+        }
+
+        select.incorrect {
+            background-color: var(--error-color) !important;
+            color: white !important;
+            border-color: #922b21 !important;
+        }
+
+        /* Button Styling */
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 5px;
+            justify-content: flex-end;
+        }
+
+        button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            font-size: 0.85em;
+            transition: opacity 0.2s;
+        }
+
+        .btn-reset { background-color: #95a5a6; }
+        .btn-solution { background-color: var(--accent-color); }
+        button:hover { opacity: 0.8; }
+
+        @media (max-width: 600px) {
+            .chat-bubble { max-width: 95%; }
+            .button-group { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Russisch-Trainer: Imperative im Dialog</h1>
+
+    <div class="intro-box">
+        <strong>Anleitung:</strong> Vervollständigen Sie die Dialoge. Überlegen Sie: Wird eine Person (Du) oder mehrere Personen/eine Respektsperson (Sie) angesprochen?
+        <br>Wählen Sie die richtige Form aus. Die Farbe ändert sich sofort: 
+        <span style="color:var(--success-color); font-weight:bold;">Grün = Richtig</span>, 
+        <span style="color:var(--error-color); font-weight:bold;">Rot = Falsch</span>.
+    </div>
+
+    <div id="exercise-root"></div>
+</div>
+
+<script>
+    const dialogTasks = [
+        { id: 1, a: "Я не знаю, как это делать.", bPre: "B: „", bPost: " учителя!“", opts: ["Спроси", "Спросите", "Спросишь"], ans: "Спроси" },
+        { id: 2, a: "Друзья, завтра будет очень холодно.", bPre: "B: „Тогда ", bPost: " тёплую одежду!“", opts: ["возьми", "возьмите", "возьмёшь"], ans: "возьмите" },
+        { id: 3, a: "Анна Петровна, можно прочитать текст?", bPre: "B: „Да, пожалуйста, ", bPost: "!“", opts: ["читай", "читайте", "читаи"], ans: "читайте" },
+        { id: 4, a: "Я очень устал сегодня.", bPre: "B: „Тогда немного ", bPost: " дома.“", opts: ["отдохни", "отдохните", "отдыхай"], ans: "отдохни" },
+        { id: 5, a: "Мама, суп очень горячий!", bPre: "B: „Немного ", bPost: ", он остынет.“", opts: ["подожди", "подождите", "жди"], ans: "подожди" },
+        { id: 6, a: "Дети, на улице сильный дождь.", bPre: "B: „", bPost: " зонт!“", opts: ["Возьми", "Возьмите", "Возьмити"], ans: "Возьмите" },
+        { id: 7, a: "Иван, ты говоришь слишком быстро.", bPre: "B: „Пожалуйста, ", bPost: " медленнее.“", opts: ["говори", "говорите", "говорте"], ans: "говори" },
+        { id: 8, a: "Господин директор, подпишите здесь.", bPre: "B: „Хорошо, ", bPost: " мне ручку.“", opts: ["дай", "дайте", "давай"], ans: "дайте" },
+        { id: 9, a: "Я не понимаю, что это значит.", bPre: "B: „", bPost: " в словаре!“", opts: ["Посмотри", "Посмотрите", "Смотрте"], ans: "Посмотри" },
+        { id: 10, a: "Ребята, урок уже начался.", bPre: "B: „Пожалуйста, ", bPost: "!“", opts: ["молчи", "молчите", "молчат"], ans: "молчите" },
+        { id: 11, a: "Мне нужно идти в магазин.", bPre: "B: „Хорошо, ", bPost: " хлеб.“", opts: ["купи", "купите", "купь"], ans: "купи" },
+        { id: 12, a: "Мы очень хотим пить.", bPre: "B: „", bPost: " холодную воду.“", opts: ["Возьми", "Возьмите", "Возьмте"], ans: "Возьмите" },
+        { id: 13, a: "Я боюсь этого экзамена.", bPre: "B: „Не ", bPost: ", ты всё знаешь.“", opts: ["бойся", "бойтесь", "бойсясь"], ans: "бойся" },
+        { id: 14, a: "В комнате очень темно.", bPre: "B: „", bPost: " свет, пожалуйста.“", opts: ["Включи", "Включите", "Включь"], ans: "Включи" },
+        { id: 15, a: "Бабушка, тебе помочь?", bPre: "B: „Да, ", bPost: " мне яблоко.“", opts: ["дай", "дайте", "давай"], ans: "дай" },
+        { id: 16, a: "Гости скоро придут.", bPre: "B: „", bPost: " квартиру!“", opts: ["Убери", "Уберите", "Уберьте"], ans: "Уберите" },
+        { id: 17, a: "Я не хочу это есть.", bPre: "B: „", bPost: ", это очень вкусно!“", opts: ["Попробуй", "Попробуйте", "Попробуи"], ans: "Попробуй" },
+        { id: 18, a: "Папа, я закончил все уроки.", bPre: "B: „Молодец, ", bPost: " гулять.“", opts: ["иди", "идите", "идь"], ans: "иди" },
+        { id: 19, a: "Господин профессор, мы вас не слышим.", bPre: "B: „Хорошо, ", bPost: " внимательно.“", opts: ["слушай", "слушайте", "слушаи"], ans: "слушайте" },
+        { id: 20, a: "Максим, пора вставать.", bPre: "B: „", bPost: " скорее!“", opts: ["Вставай", "Вставайте", "Встань"], ans: "Вставай" }
+    ];
+
+    function buildExercise() {
+        const root = document.getElementById('exercise-root');
+        dialogTasks.forEach(task => {
+            const card = document.createElement('div');
+            card.className = 'task-card';
+
+            // Sprecher A
+            const bubbleA = document.createElement('div');
+            bubbleA.className = 'chat-bubble bubble-a';
+            bubbleA.innerText = "A: „" + task.a + "“";
+
+            // Sprecher B (Zusammenbau aus Text-Teilen und Select)
+            const bubbleB = document.createElement('div');
+            bubbleB.className = 'chat-bubble bubble-b';
+
+            const spanPre = document.createElement('span');
+            spanPre.innerText = task.bPre;
+
+            const select = document.createElement('select');
+            select.id = `select-${task.id}`;
+            select.dataset.answer = task.ans;
+            
+            // Leere Start-Option
+            const optNone = document.createElement('option');
+            optNone.value = "";
+            optNone.innerText = "???";
+            select.appendChild(optNone);
+
+            // Mischen der Optionen
+            const shuffled = [...task.opts].sort(() => Math.random() - 0.5);
+            shuffled.forEach(text => {
+                const o = document.createElement('option');
+                o.value = text;
+                o.innerText = text;
+                select.appendChild(o);
+            });
+
+            // Sofort-Feedback beim Ändern
+            select.addEventListener('change', function() {
+                if (this.value === "") {
+                    this.className = "";
+                } else if (this.value === this.dataset.answer) {
+                    this.className = "correct";
+                } else {
+                    this.className = "incorrect";
+                }
+            });
+
+            const spanPost = document.createElement('span');
+            spanPost.innerText = task.bPost;
+
+            bubbleB.appendChild(spanPre);
+            bubbleB.appendChild(select);
+            bubbleB.appendChild(spanPost);
+
+            // Button Gruppe
+            const btnGroup = document.createElement('div');
+            btnGroup.className = 'button-group';
+            btnGroup.innerHTML = `
+                <button class="btn-reset" onclick="resetTask(${task.id})">Zurücksetzen</button>
+                <button class="btn-solution" onclick="solveTask(${task.id})">Lösung anzeigen</button>
+            `;
+
+            card.appendChild(bubbleA);
+            card.appendChild(bubbleB);
+            card.appendChild(btnGroup);
+            root.appendChild(card);
+        });
+    }
+
+    window.resetTask = function(id) {
+        const sel = document.getElementById(`select-${id}`);
+        sel.value = "";
+        sel.className = "";
+    };
+
+    window.solveTask = function(id) {
+        const sel = document.getElementById(`select-${id}`);
+        sel.value = sel.dataset.answer;
+        sel.className = "correct";
+    };
+
+    // Start
+    buildExercise();
+</script>
+
+</body>
+</html>
