@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch-Trainer: Der Weg zum Imperativ</title>
+    <!-- Polyfill für Drag & Drop auf Touch-Geräten -->
+    <script src="https://cdn.jsdelivr.net/npm/drag-drop-touch@1.3.1/DragDropTouch.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --border-color: #dcdde1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .intro-box {
+            background-color: #eaf2f8;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 6px solid var(--accent-color);
+        }
+
+        .instruction {
+            font-style: italic;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        /* Prozess-Ketten Layout */
+        .chain-container {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .chain-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chain-label {
+            font-weight: bold;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        .verb-display {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        select {
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 2px solid var(--border-color);
+            outline: none;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        /* Status-Farben */
+        .correct {
+            background-color: #d4edda !important;
+            border-color: var(--success-color) !important;
+            color: #155724 !important;
+        }
+
+        .incorrect {
+            background-color: #f8d7da !important;
+            border-color: var(--error-color) !important;
+            color: #721c24 !important;
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            transition: opacity 0.2s;
+        }
+
+        .btn-reset { background-color: #95a5a6; }
+        .btn-solve { background-color: var(--accent-color); }
+        button:hover { opacity: 0.8; }
+
+        @media (max-width: 600px) {
+            .chain-row { grid-template-columns: 1fr; gap: 5px; }
+            .container { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Logik der Imperativ-Bildung</h1>
+
+    <div class="intro-box">
+        <strong>Der Bildungs-Weg:</strong>
+        <ol>
+            <li>Infinitiv &rarr; 2. <strong>я-Form</strong> (bestimmt die Betonung) &rarr; 3. <strong>они-Form</strong> (liefert den Stamm) &rarr; 4. <strong>Imperativ</strong>.</li>
+        </ol>
+        <span class="instruction">Wähle für jeden Schritt die richtige Form aus. Richtige Antworten werden sofort grün, falsche rot markiert.</span>
+    </div>
+
+    <!-- Die Aufgaben werden hier generiert -->
+    <div id="tasks-root"></div>
+
+</div>
+
+<script>
+    const taskData = [
+        {
+            inf: "писать",
+            steps: [
+                { label: "я-Form (Betonung?)", ans: "пишу", options: ["пишу", "пишут", "пишешь"] },
+                { label: "они-Form (Stamm?)", ans: "пишут", options: ["пишут", "пишат", "пишу"] },
+                { label: "Imperativ Singular", ans: "пиши", options: ["пиши", "пишь", "пишай"] }
+            ]
+        },
+        {
+            inf: "говорить",
+            steps: [
+                { label: "я-Form (Betonung?)", ans: "говорю", options: ["говорю", "говорят", "говоришь"] },
+                { label: "они-Form (Stamm?)", ans: "говорят", options: ["говорят", "говорют", "говорю"] },
+                { label: "Imperativ Singular", ans: "говори", options: ["говор", "говори", "говоряй"] }
+            ]
+        },
+        {
+            inf: "читать",
+            steps: [
+                { label: "я-Form (Betonung?)", ans: "читаю", options: ["читаю", "читают", "читаешь"] },
+                { label: "они-Form (Stamm?)", ans: "читают", options: ["читают", "читаят", "читаю"] },
+                { label: "Imperativ Singular", ans: "читай", options: ["чити", "читай", "читаи"] }
+            ]
+        },
+        {
+            inf: "делать",
+            steps: [
+                { label: "я-Form (Betonung?)", ans: "делаю", options: ["делаю", "делают", "делаешь"] },
+                { label: "они-Form (Stamm?)", ans: "делают", options: ["делают", "делаят", "делаю"] },
+                { label: "Imperativ Singular", ans: "делай", options: ["делай", "дели", "дель"] }
+            ]
+        },
+        {
+            inf: "готовить",
+            steps: [
+                { label: "я-Form (Betonung?)", ans: "готовлю", options: ["готовлю", "готовят", "готовишь"] },
+                { label: "они-Form (Stamm?)", ans: "готовят", options: ["готовят", "готовлю", "готовют"] },
+                { label: "Imperativ Singular", ans: "готовь", options: ["готовь", "готови", "готовляй"] }
+            ]
+        },
+        {
+            inf: "встать",
+            steps: [
+                { label: "я-Form (Betonung?)", ans: "встану", options: ["встаю", "встану", "встаешь"] },
+                { label: "они-Form (Stamm?)", ans: "встанут", options: ["встанут", "встают", "встанат"] },
+                { label: "Imperativ Singular", ans: "встань", options: ["встань", "встани", "вставай"] }
+            ]
+        },
+        {
+            inf: "идти",
+            steps: [
+                { label: "я-Form (Betonung?)", ans: "иду", options: ["иду", "идешь", "идут"] },
+                { label: "они-Form (Stamm?)", ans: "идут", options: ["идут", "идат", "иду"] },
+                { label: "Imperativ Singular", ans: "иди", options: ["идь", "иди", "идяй"] }
+            ]
+        },
+        {
+            inf: "смотреть",
+            steps: [
+                { label: "я-Form (Betonung?)", ans: "смотрю", options: ["смотрю", "смотрят", "смотришь"] },
+                { label: "они-Form (Stamm?)", ans: "смотрят", options: ["смотрят", "смотрют", "смотрю"] },
+                { label: "Imperativ Singular", ans: "смотри", options: ["смотри", "смотрь", "смотряй"] }
+            ]
+        },
+        {
+            inf: "слушать",
+            steps: [
+                { label: "я-Form (Betonung?)", ans: "слушаю", options: ["слушаю", "слушают", "слушаешь"] },
+                { label: "они-Form (Stamm?)", ans: "слушают", options: ["слушают", "слушают", "слушаю"] },
+                { label: "Imperativ Singular", ans: "слушай", options: ["слушай", "слуши", "слушь"] }
+            ]
+        },
+        {
+            inf: "помочь",
+            steps: [
+                { label: "я-Form (Betonung?)", ans: "помогу", options: ["помогу", "поможешь", "помогут"] },
+                { label: "они-Form (Stamm?)", ans: "помогут", options: ["помогут", "помогат", "помогу"] },
+                { label: "Imperativ Singular", ans: "помоги", options: ["помоги", "поможь", "помогай"] }
+            ]
+        }
+    ];
+
+    function initTasks() {
+        const root = document.getElementById('tasks-root');
+        taskData.forEach((task, tIdx) => {
+            const container = document.createElement('div');
+            container.className = 'chain-container';
+            container.id = `task-${tIdx}`;
+
+            // Header: Infinitiv
+            const header = document.createElement('div');
+            header.className = 'chain-row';
+            header.innerHTML = `<span class="chain-label">Infinitiv:</span><span class="verb-display">${task.inf}</span>`;
+            container.appendChild(header);
+
+            // Steps
+            task.steps.forEach((step, sIdx) => {
+                const row = document.createElement('div');
+                row.className = 'chain-row';
+                
+                const label = document.createElement('span');
+                label.className = 'chain-label';
+                label.innerText = step.label + ":";
+                
+                const select = document.createElement('select');
+                select.dataset.ans = step.ans;
+                select.onchange = function() { checkStep(this); };
+                
+                // Add default option
+                const defOpt = document.createElement('option');
+                defOpt.value = "";
+                defOpt.innerText = "-- wählen --";
+                select.appendChild(defOpt);
+
+                // Add options (shuffled)
+                const shuffledOpts = [...step.options].sort(() => Math.random() - 0.5);
+                shuffledOpts.forEach(optText => {
+                    const opt = document.createElement('option');
+                    opt.value = optText;
+                    opt.innerText = optText;
+                    select.appendChild(opt);
+                });
+
+                row.appendChild(label);
+                row.appendChild(select);
+                container.appendChild(row);
+            });
+
+            // Buttons
+            const btnGroup = document.createElement('div');
+            btnGroup.className = 'button-group';
+            btnGroup.innerHTML = `
+                <button class="btn-reset" onclick="resetTask(${tIdx})">Zurücksetzen</button>
+                <button class="btn-solve" onclick="solveTask(${tIdx})">Lösung zeigen</button>
+            `;
+            container.appendChild(btnGroup);
+
+            root.appendChild(container);
+        });
+    }
+
+    function checkStep(select) {
+        if (select.value === "") {
+            select.className = "";
+        } else if (select.value === select.dataset.ans) {
+            select.className = "correct";
+        } else {
+            select.className = "incorrect";
+        }
+    }
+
+    window.resetTask = function(tIdx) {
+        const container = document.getElementById(`task-${tIdx}`);
+        const selects = container.querySelectorAll('select');
+        selects.forEach(s => {
+            s.value = "";
+            s.className = "";
+        });
+    };
+
+    window.solveTask = function(tIdx) {
+        const container = document.getElementById(`task-${tIdx}`);
+        const selects = container.querySelectorAll('select');
+        selects.forEach(s => {
+            s.value = s.dataset.ans;
+            s.className = "correct";
+        });
+    };
+
+    // Start
+    initTasks();
+
+</script>
+
+</body>
+</html>
