@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vokabel-Trainer: Russisch</title>
+    <style>
+        /* --- CSS --- */
+        :root {
+            --primary-green: #2d5a27;
+            --mid-green: #4caf50;
+            --light-green: #e8f5e9;
+            --accent-green: #81c784;
+            --text-dark: #1b301b;
+            --white: #ffffff;
+            --shadow: rgba(0, 0, 0, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--light-green);
+            color: var(--text-dark);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--primary-green);
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+        }
+
+        /* Flashcard Container */
+        .flashcard-container {
+            perspective: 1000px;
+            width: 100%;
+            height: 300px;
+            margin: 20px auto;
+            cursor: pointer;
+        }
+
+        .flashcard {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+            box-shadow: 0 8px 25px var(--shadow);
+            border-radius: 15px;
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            border-radius: 15px;
+            background: var(--white);
+            border: 3px solid var(--mid-green);
+        }
+
+        .flashcard-back {
+            transform: rotateY(180deg);
+            background-color: var(--white);
+        }
+
+        .word-text {
+            font-weight: bold;
+            color: var(--primary-green);
+            margin: 0;
+            word-wrap: break-word;
+            max-width: 100%;
+        }
+
+        .label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--accent-green);
+            margin-bottom: 15px;
+            position: absolute;
+            top: 15px;
+        }
+
+        /* Navigation & Controls */
+        .progress {
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: var(--primary-green);
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .nav-buttons {
+            grid-column: span 2;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 12px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+            background-color: var(--mid-green);
+            color: white;
+            box-shadow: 0 4px var(--primary-green);
+        }
+
+        button:hover {
+            background-color: #43a047;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 0 var(--primary-green);
+        }
+
+        .secondary-btn {
+            background-color: var(--primary-green);
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .hint {
+            margin-top: 25px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        @media (max-width: 480px) {
+            .flashcard-container { height: 250px; }
+            h1 { font-size: 1.4rem; }
+            button { padding: 10px; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <h1>Russisch-Trainer</h1>
+        
+        <div class="progress" id="progress">1 / 100</div>
+
+        <div class="flashcard-container" id="cardContainer" onclick="flipCard()">
+            <div class="flashcard" id="flashcard">
+                <div class="flashcard-front">
+                    <span class="label">Russisch</span>
+                    <p class="word-text" id="frontText">Загрузка...</p>
+                </div>
+                <div class="flashcard-back">
+                    <span class="label">Deutsch</span>
+                    <p class="word-text" id="backText">Laden...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="nav-buttons">
+                <button id="prevBtn" style="flex: 1;">← Vorherige</button>
+                <button id="nextBtn" style="flex: 1;">Nächste →</button>
+            </div>
+            <button onclick="shuffleDeck()" class="secondary-btn">🔀 Mischen</button>
+            <button onclick="goToStart()" class="secondary-btn">🏠 Anfang</button>
+        </div>
+
+        <div class="hint">
+            Tastatur: Pfeiltasten für Navigation | Leertaste/Enter zum Umdrehen | Pos1 für Anfang
+        </div>
+    </div>
+
+    <script>
+        /* --- JavaScript --- */
+
+        const rawData = `
+1.	де́лать / сде́лать – machen, tun
+2.	писа́ть / написа́ть – schreiben
+3.	чита́ть / прочита́ть – lesen
+4.	говори́ть / сказа́ть – sprechen, sagen
+5.	помога́ть / помо́чь – helfen
+6.	слу́шать / послу́шать – zuhören
+7.	смотре́ть / посмотре́ть – schauen, ansehen
+8.	расска́зывать / рассказа́ть – erzählen
+9.	спра́шивать / спроси́ть – fragen
+10.	отвеча́ть / отве́тить – antworten
+11.	дава́ть / дать – geben
+12.	брать / взять – nehmen
+13.	покупа́ть / купи́ть – kaufen
+14.	забыва́ть / забы́ть – vergessen
+15.	открыва́ть / откры́ть – öffnen
+16.	закрыва́ть / закры́ть – schließen
+17.	встава́ть / встать – aufstehen
+18.	сади́ться / сесть – sich setzen
+19.	ложи́ться / лечь – sich hinlegen
+20.	идти́ / пойти́ – gehen (zu Fuß)
+21.	е́хать / пое́хать – fahren
+22.	пить / вы́пить – trinken
+23.	есть / пое́сть – essen
+24.	гото́вить / пригото́вить – vorbereiten, kochen
+25.	ждать / подожда́ть – warten
+26.	звони́ть / позвони́ть – anrufen
+27.	одева́ться / оде́ться – sich anziehen
+28.	мы́ться / помы́ться – sich waschen
+29.	улыба́ться / улыбну́ться – lächeln
+30.	знако́миться / познако́миться – sich bekannt machen, kennenlernen
+31.	повторя́ть / повтори́ть – wiederholen
+32.	начина́ть / нача́ть – beginnen, anfangen
+33.	петь / спеть – singen
+34.	рисова́ть / нарисова́ть – zeichnen, malen
+35.	учи́ть / вы́учить – lernen, auswendig lernen
+36.	спать / поспа́ть – schlafen
+37.	выбира́ть / вы́брать – wählen, aussuchen
+38.	ве́рить / пове́рить – glauben
+39.	проща́ть / прости́ть – verzeihen
+40.	возвраща́ться / верну́ться – zurückkehren
+41.	входи́ть / войти́ – eintreten, hineingehen
+42.	выходи́ть / вы́йти – hinausgehen, verlassen
+43.	ста́вить / поста́вить – stellen
+44.	класть / положи́ть – legen
+45.	письмо́ – Brief
+46.	кни́га – Buch
+47.	текст – Text
+48.	сло́во – Wort
+49.	учи́тель – Lehrer
+50.	учени́к – Schüler
+51.	вопро́с – Frage
+52.	отве́т – Antwort
+53.	окно́ – Fenster
+54.	дверь – Tür
+55.	хлеб – Brot
+56.	вода́ – Wasser
+57.	сок – Saft
+58.	суп – Suppe
+59.	обе́д – Mittagessen
+60.	ча́й – Tee
+61.	ко́фе – Kaffee
+62.	молоко́ – Milch
+63.	стол – Tisch
+64.	стул – Stuhl
+65.	дом – Haus, Heim
+66.	у́лица – Straße
+67.	доро́га – Weg, Straße
+68.	по́мощь – Hilfe
+69.	сове́т – Rat, Ratschlag
+70.	зада́ние – Aufgabe
+71.	упражне́ние – Übung
+72.	слова́рь – Wörterbuch
+73.	фотогра́фия – Fotografie, Foto
+74.	карти́на – Bild, Gemälde
+75.	му́зыка – Musik
+76.	пе́сня – Lied
+77.	исто́рия – Geschichte
+78.	па́спорт – Pass, Reisepass
+79.	биле́т – Ticket, Fahrkarte
+80.	ру́чка – Kugelschreiber, Stift
+81.	каранда́ш – Bleistift
+82.	тетра́дь – Heft
+83.	у́тро – Morgen
+84.	день – Tag
+85.	ве́чер – Abend
+86.	ночь – Nacht
+87.	дру́г – Freund
+88.	ма́ма – Mama
+89.	па́па – Papa
+90.	ба́бушка – Großmutter
+91.	де́душка – Großvater
+92.	ребёнок – Kind
+93.	де́ти – Kinder
+94.	челове́к – Mensch
+95.	лю́ди – Leute, Menschen
+96.	го́род – Stadt
+97.	магази́н – Geschäft, Laden
+98.	шко́ла – Schule
+99.	уро́к – Unterricht, Lektion
+100.	экза́мен – Prüfung, Examen
+        `.trim();
+
+        let deck = [];
+        let currentIndex = 0;
+
+        // Parser
+        function parseData() {
+            const lines = rawData.split('\n');
+            deck = lines.map(line => {
+                // Trenne "Nummer. Russisch – Deutsch"
+                // Wir nutzen Regex, um die Nummer am Anfang und den ersten Gedankenstrich zu finden
+                const content = line.replace(/^\d+\.\s+/, '');
+                const parts = content.split(' – ');
+                return {
+                    front: parts[0] ? parts[0].trim() : '',
+                    back: parts[1] ? parts[1].trim() : ''
+                };
+            });
+        }
+
+        const flashcard = document.getElementById('flashcard');
+        const frontText = document.getElementById('frontText');
+        const backText = document.getElementById('backText');
+        const progress = document.getElementById('progress');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        function updateCard() {
+            // Karte zurücksetzen (immer zuerst Vorderseite zeigen)
+            flashcard.classList.remove('flipped');
+            
+            setTimeout(() => {
+                const card = deck[currentIndex];
+                frontText.innerText = card.front;
+                backText.innerText = card.back;
+                
+                // Dynamische Schriftgröße
+                adjustFontSize(frontText, card.front);
+                adjustFontSize(backText, card.back);
+
+                progress.innerText = `${currentIndex + 1} / ${deck.length}`;
+                
+                // Button-Status
+                prevBtn.disabled = currentIndex === 0;
+                nextBtn.disabled = currentIndex === deck.length - 1;
+            }, currentIndex === 0 ? 0 : 50); // Kleiner Delay für UX
+        }
+
+        function adjustFontSize(element, text) {
+            const len = text.length;
+            if (len > 50) {
+                element.style.fontSize = "1.1rem";
+            } else if (len > 25) {
+                element.style.fontSize = "1.5rem";
+            } else {
+                element.style.fontSize = "2rem";
+            }
+        }
+
+        function flipCard() {
+            flashcard.classList.toggle('flipped');
+        }
+
+        function nextCard() {
+            if (currentIndex < deck.length - 1) {
+                currentIndex++;
+                updateCard();
+            }
+        }
+
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateCard();
+            }
+        }
+
+        function goToStart() {
+            currentIndex = 0;
+            updateCard();
+        }
+
+        function shuffleDeck() {
+            // Fisher-Yates Shuffle
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            currentIndex = 0;
+            updateCard();
+        }
+
+        // Tastatursteuerung
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowLeft':
+                    prevCard();
+                    break;
+                case 'ArrowRight':
+                    nextCard();
+                    break;
+                case ' ':
+                case 'Enter':
+                    e.preventDefault(); // Verhindert Scrollen bei Leertaste
+                    flipCard();
+                    break;
+                case 'Home':
+                    goToStart();
+                    break;
+            }
+        });
+
+        // Event Listener für Buttons
+        prevBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            prevCard();
+        });
+
+        nextBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            nextCard();
+        });
+
+        // Initialisierung
+        parseData();
+        updateCard();
+    </script>
+</body>
+</html>
